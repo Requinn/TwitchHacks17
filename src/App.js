@@ -22,8 +22,8 @@ class App extends Component {
 
     let client = new chatClient({
         channel: '#'+ channel,
-        username: 'requinn',
-        password: 'oauth:67hqi7y1taocu6knvw8sk33enwgaxe',
+        username: 'thesulima',
+        password: 'oauth:xwuy0tnf9g8x1bpx439km43av15lig',
     });
     client.open();
     this.setState({
