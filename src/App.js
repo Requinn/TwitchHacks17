@@ -21,17 +21,15 @@ class App extends Component {
     client.onMessageReceived = (message) => {
       let newLog = this.state.log + " " + message;
       let map = this.wordcnt(newLog);
-      let words = this.map_to_objarray(map);
-      let emoijiObjArray = words.filter((element) => {
-        const word = element.word;
-        return twitchEmotes[word] !== undefined;
-      });
-      words.sort(function(a, b){return a.count - b.count});
+      let words = this.map_to_objarray(map.words, 5);
+      let emote = this.map_to_objarray(map.emote, 1);
+      console.log(emote);
+
       this.setState({
         log: newLog,
         map,
         words,
-        emoijiObjArray
+        emote
       });
     }
   }
@@ -39,34 +37,55 @@ class App extends Component {
 
 
   wordcnt(words) {
-    return words.replace(/( a |by|the| i )|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
-      map[word] = (map[word]||0)+1;
+    return words.replace(/( a |by|the| i |for|[0-9]|\b[a-z]{1,2}\b)|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
+      if (map.words === undefined) {
+        map.words = {};
+        map.emote = {};
+      }
+      //console.log(map);
+      if (twitchEmotes[word] !== undefined) {
+        //console.log(1, word);
+        map.emote[word] = (map.emote[word]||0)+1;
+      } else if (word !== ""){
+        // console.log(2, word);
+        map.words[word] = (map.words[word]||0)+1;
+
+      }
       return map;
     }, Object.create(null));
 
   }
 
-  map_to_objarray(map){
+  map_to_objarray(map, minCount){
     var a = [];
     var size = map.length;
     for(var m in map){
-      if(map[m] > 1){
+      if(map[m] > minCount){
         a.push({word:m.substring(0), count:map[m]});
       }
     }
     return a;
   }
   	render () {
-      console.log(this.state.emoijiObjArray)
     	return (
-      	<BarChart width={600} height={300} data={this.state.emoijiObjArray}
-              margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-         <XAxis dataKey="word"/>
-         <YAxis/>
-         <CartesianGrid strokeDasharray="3 3"/>
-         <Tooltip/>
-         <Bar dataKey="count" fill="#8884d8" />
-        </BarChart>
+        <div>
+        	<BarChart width={600} height={300} data={this.state.emote}
+                margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+           <XAxis dataKey="word"/>
+           <YAxis/>
+           <CartesianGrid strokeDasharray="3 3"/>
+           <Tooltip/>
+           <Bar dataKey="count" fill="#8884d8" />
+          </BarChart>
+        	<BarChart width={600} height={300} data={this.state.words}
+                margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+           <XAxis dataKey="word"/>
+           <YAxis/>
+           <CartesianGrid strokeDasharray="3 3"/>
+           <Tooltip/>
+           <Bar dataKey="count" fill="#8884d8" />
+          </BarChart>
+        </div>
       );
     }
   }
