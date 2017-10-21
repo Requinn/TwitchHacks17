@@ -19,7 +19,6 @@ class App extends Component {
   }
 
   onNewChannel(channel) {
-
     let client = new chatClient({
         channel: '#'+ channel,
         username: 'thesulima',
@@ -31,7 +30,8 @@ class App extends Component {
       words: [],
       emote: [],
       status: "Connecting",
-      client
+      client,
+      channelName: ""
     });
     client.onMessageReceived = (message) => {
       console.log(message);
@@ -46,7 +46,7 @@ class App extends Component {
 
 
   wordcnt(words) {
-    return words.replace(/( a |by|the| i |for|[0-9]|\b[a-z]{1,2}\b)|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
+    return words.replace(/( a |by|the| i |for|[0-9]|\b[a-e]{1,2}\b|\b[g-z]{1,2}\b)|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
       if (map.words === undefined) {
         map.words = {};
         map.emote = {};
@@ -85,10 +85,12 @@ class App extends Component {
               #
             </span>
             <input onChange={(event) => this.setState({channelName: event.target.value})} type="text"/>
-            <button onClick={(event) => this.onNewChannel(this.state.channelName)}>
+            <button onClick={(event) => this.onNewChannel(this.state.channelName) }>
               Enter Channel
             </button>
-            <span>
+            <span style={{
+              marginLeft: '5px'
+            }}>
               {this.state.status}
             </span>
           </div>
@@ -111,7 +113,7 @@ class App extends Component {
            <CartesianGrid strokeDasharray="3 3"/>
            <Tooltip/>
            <Legend />
-           <Bar name = "Emote Count" dataKey="count" fill="#8884d8" />
+           <Bar name = "Emote Count" dataKey="count" fill="#6441A4" />
           </BarChart>
         	<BarChart width={600} height={300} data={this.state.words}
                 margin={{top: 5, right: 30, left: 20, bottom: 5}}>
@@ -120,7 +122,7 @@ class App extends Component {
            <CartesianGrid strokeDasharray="3 3"/>
            <Tooltip/>
            <Legend />
-           <Bar name = "Word Frequency" dataKey="count" fill="#8884d8" />
+           <Bar name = "Word Frequency" dataKey="count" fill="#6441A4" />
           </BarChart>
         </div>
       );
