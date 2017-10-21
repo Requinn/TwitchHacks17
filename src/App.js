@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import chatClient from './chatbot.js';
 import './App.css';
-import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip} from 'recharts';
+import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,Legend} from 'recharts';
 import twitchEmotes from './twitchEmotes.json';
 import ReactInterval from 'react-interval';
 
@@ -12,10 +12,21 @@ class App extends Component {
     this.state = {
       log: "",
       words: [],
-      emote: []
+      emote: [],
+      status: ""
     };
+
+  }
+
+  onNewChannel(channel) {
+    this.setState({
+      log: "",
+      words: [],
+      emote: [],
+      channelName: ""
+    });
     let client = new chatClient({
-        channel: '#nightblue3',
+        channel: '#'+ channel,
         username: 'requinn',
         password: 'oauth:67hqi7y1taocu6knvw8sk33enwgaxe',
     });
@@ -63,9 +74,23 @@ class App extends Component {
   	render () {
     	return (
         <div>
+          <div style={{
+            margin: '20px 77px'
+          }}>
+            <span>
+              #
+            </span>
+            <input onChange={(event) => this.setState({channelName: event.target.value})} type="text"/>
+            <button onClick={(event) => this.onNewChannel("Bluenight3")}>
+              Enter Channel
+            </button>
+            <span>
+              {this.state.status}
+            </span>
+          </div>
+
           <ReactInterval timeout={1000} enabled={true}
             callback={() => {
-              console.log("Timeout");
               const map = this.wordcnt(this.state.log);
               const words = this.map_to_objarray(map.words, 5);
               const emote = this.map_to_objarray(map.emote, 1);
@@ -81,7 +106,8 @@ class App extends Component {
            <YAxis/>
            <CartesianGrid strokeDasharray="3 3"/>
            <Tooltip/>
-           <Bar dataKey="count" fill="#8884d8" />
+           <Legend />
+           <Bar name = "Emote Count" dataKey="count" fill="#8884d8" />
           </BarChart>
         	<BarChart width={600} height={300} data={this.state.words}
                 margin={{top: 5, right: 30, left: 20, bottom: 5}}>
@@ -89,7 +115,8 @@ class App extends Component {
            <YAxis/>
            <CartesianGrid strokeDasharray="3 3"/>
            <Tooltip/>
-           <Bar dataKey="count" fill="#8884d8" />
+           <Legend />
+           <Bar name = "Word Frequency" dataKey="count" fill="#8884d8" />
           </BarChart>
         </div>
       );
