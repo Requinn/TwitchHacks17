@@ -1,7 +1,9 @@
 import React, { Component } from 'react';
 import chatClient from './chatbot.js';
 import './App.css';
-import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip} from 'recharts';
+import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, PieChart, Pie} from 'recharts';
+import emoji from './Emojis.json';
+
 class App extends Component {
 
   constructor(props) {
@@ -9,58 +11,73 @@ class App extends Component {
     this.state = {
       log: "",
       map: {},
-      words: []
+      words: [],
+      emojis: {},
+      emojiarray: []
     };
     let client = new chatClient({
-        channel: '#riotgames',
+        channel: '#handiofiblood',
         username: 'requinn',
         password: 'oauth:67hqi7y1taocu6knvw8sk33enwgaxe',
     });
     client.open();
     client.onMessageReceived = (message) => {
       let newLog = this.state.log + " " + message.toLowerCase();
-      let map = this.wordcnt(newLog);
+      let map = this.wordcnt(newLog, 0);
+      let emojis = this.wordcnt(newLog, 1);
+      let emojiarray = this.map_to_objarray(emojis);
       let words = this.map_to_objarray(map);
       words.sort(function(a, b){return a.count - b.count});
       this.setState({
         log: newLog,
         map,
-        words
+        words,
+        emojis,
+        emojiarray
       });
     }
   }
 
-
-
-  wordcnt(words) {
-    return words.replace(/( a |by|the| i )|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
-      map[word] = (map[word]||0)+1;
-      return map;
+  wordcnt(words, opt) {
+    return words.replace(/the|and|\b[a-z]{1,2}\b|\b[^\w\s]\b/g, "").split(/\s+/).reduce(function(map, word){
+      if(emoji.hasOwnProperty(word)){
+        emoji[word] = (map[word]||0)+1;
+      }else{
+        map[word] = (map[word]||0)+1;
+      }
+      if(opt == 0){
+        return map;
+      }else{
+        return emoji;
+      }
     }, Object.create(null));
 
   }
 
-  map_to_objarray(map){
+  map_to_objarray(input){
     var a = [];
-    var size = map.length;
-    for(var m in map){
-      if(map[m] > 13){
-        a.push({word:m.substring(0), count:map[m]});
+    var size = input.length;
+    for(var m in input){
+      if(input[m] > 1){
+        a.push({name:m.substring(0), value:input[m]});
       }
     }
     return a;
   }
   	render () {
-      console.log(this.state.words)
+
     	return (
+        <div>
       	<BarChart width={600} height={300} data={this.state.words}
               margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-         <XAxis dataKey="word"/>
+         <XAxis dataKey="name"/>
          <YAxis/>
          <CartesianGrid strokeDasharray="3 3"/>
          <Tooltip/>
-         <Bar dataKey="count" fill="#8884d8" />
+         <Bar dataKey="value" fill="#8884d8" />
         </BarChart>
+
+        </div>
       );
     }
   }
