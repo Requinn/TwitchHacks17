@@ -1,31 +1,44 @@
 import React, { Component } from 'react';
 import chatClient from './chatbot.js';
 import './App.css';
-import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip} from 'recharts';
+import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,Legend} from 'recharts';
+import twitchEmotes from './twitchEmotes.json';
+import ReactInterval from 'react-interval';
+
 class App extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
       log: "",
-      map: {},
-      words: []
+      words: [],
+      emote: [],
+      status: "",
     };
+
+  }
+
+  onNewChannel(channel) {
     let client = new chatClient({
-        channel: '#riotgames',
-        username: 'requinn',
-        password: 'oauth:67hqi7y1taocu6knvw8sk33enwgaxe',
+        channel: '#'+ channel,
+        username: 'thesulima',
+        password: 'oauth:xwuy0tnf9g8x1bpx439km43av15lig',
     });
     client.open();
+    this.setState({
+      log: "",
+      words: [],
+      emote: [],
+      status: "Connecting",
+      client,
+      channelName: ""
+    });
     client.onMessageReceived = (message) => {
-      let newLog = this.state.log + " " + message.toLowerCase();
-      let map = this.wordcnt(newLog);
-      let words = this.map_to_objarray(map);
-      words.sort(function(a, b){return a.count - b.count});
+      console.log(message);
+      const newLog = this.state.log + " " + message;
       this.setState({
         log: newLog,
-        map,
-        words
+        status: "Connected"
       });
     }
   }
@@ -33,34 +46,85 @@ class App extends Component {
 
 
   wordcnt(words) {
-    return words.replace(/( a |by|the| i )|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
-      map[word] = (map[word]||0)+1;
+    return words.replace(/( a |by|the| i |for|[0-9]|\b[a-e]{1,2}\b|\b[g-z]{1,2}\b)|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
+      if (map.words === undefined) {
+        map.words = {};
+        map.emote = {};
+      }
+      //console.log(map);
+      if (twitchEmotes[word] !== undefined) {
+        //console.log(1, word);
+        map.emote[word] = (map.emote[word]||0)+1;
+      } else if (word !== ""){
+        const lowerWord = word.toLowerCase();
+        map.words[lowerWord] = (map.words[lowerWord]||0)+1;
+
+      }
       return map;
     }, Object.create(null));
 
   }
 
-  map_to_objarray(map){
+  map_to_objarray(map, minCount){
     var a = [];
     var size = map.length;
     for(var m in map){
-      if(map[m] > 13){
+      if(map[m] > minCount){
         a.push({word:m.substring(0), count:map[m]});
       }
     }
     return a;
   }
   	render () {
-      console.log(this.state.words)
     	return (
-      	<BarChart width={600} height={300} data={this.state.words}
-              margin={{top: 5, right: 30, left: 20, bottom: 5}}>
-         <XAxis dataKey="word"/>
-         <YAxis/>
-         <CartesianGrid strokeDasharray="3 3"/>
-         <Tooltip/>
-         <Bar dataKey="count" fill="#8884d8" />
-        </BarChart>
+        <div>
+          <div style={{
+            margin: '20px 77px'
+          }}>
+            <span>
+              #
+            </span>
+            <input onChange={(event) => this.setState({channelName: event.target.value})} type="text"/>
+            <button onClick={(event) => this.onNewChannel(this.state.channelName) }>
+              Enter Channel
+            </button>
+            <span style={{
+              marginLeft: '5px'
+            }}>
+              {this.state.status}
+            </span>
+          </div>
+
+          <ReactInterval timeout={1000} enabled={true}
+            callback={() => {
+              const map = this.wordcnt(this.state.log);
+              const words = this.map_to_objarray(map.words, 5);
+              const emote = this.map_to_objarray(map.emote, 1);
+              this.setState({
+                words,
+                emote
+              })
+            }}
+          />
+        	<BarChart width={600} height={300} data={this.state.emote}
+                margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+           <XAxis dataKey="word"/>
+           <YAxis/>
+           <CartesianGrid strokeDasharray="3 3"/>
+           <Tooltip/>
+           <Legend />
+           <Bar name = "Emote Count" dataKey="count" fill="#6441A4" />
+          </BarChart>
+        	<BarChart width={600} height={300} data={this.state.words}
+                margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+           <XAxis dataKey="word"/>
+           <YAxis/>
+           <CartesianGrid strokeDasharray="3 3"/>
+           <Tooltip/>
+           <Legend />
+           <Bar name = "Word Frequency" dataKey="count" fill="#6441A4" />
+          </BarChart>
+        </div>
       );
     }
   }
