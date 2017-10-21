@@ -3,14 +3,16 @@ import chatClient from './chatbot.js';
 import './App.css';
 import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip} from 'recharts';
 import twitchEmotes from './twitchEmotes.json';
+import ReactInterval from 'react-interval';
+
 class App extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
       log: "",
-      map: {},
-      words: []
+      words: [],
+      emote: []
     };
     let client = new chatClient({
         channel: '#nightblue3',
@@ -19,17 +21,9 @@ class App extends Component {
     });
     client.open();
     client.onMessageReceived = (message) => {
-      let newLog = this.state.log + " " + message;
-      let map = this.wordcnt(newLog);
-      let words = this.map_to_objarray(map.words, 5);
-      let emote = this.map_to_objarray(map.emote, 1);
-      console.log(emote);
-
+      const newLog = this.state.log + " " + message;
       this.setState({
         log: newLog,
-        map,
-        words,
-        emote
       });
     }
   }
@@ -47,8 +41,8 @@ class App extends Component {
         //console.log(1, word);
         map.emote[word] = (map.emote[word]||0)+1;
       } else if (word !== ""){
-        // console.log(2, word);
-        map.words[word] = (map.words[word]||0)+1;
+        const lowerWord = word.toLowerCase();
+        map.words[lowerWord] = (map.words[lowerWord]||0)+1;
 
       }
       return map;
@@ -69,6 +63,18 @@ class App extends Component {
   	render () {
     	return (
         <div>
+          <ReactInterval timeout={1000} enabled={true}
+            callback={() => {
+              console.log("Timeout");
+              const map = this.wordcnt(this.state.log);
+              const words = this.map_to_objarray(map.words, 5);
+              const emote = this.map_to_objarray(map.emote, 1);
+              this.setState({
+                words,
+                emote
+              })
+            }}
+          />
         	<BarChart width={600} height={300} data={this.state.emote}
                 margin={{top: 5, right: 30, left: 20, bottom: 5}}>
            <XAxis dataKey="word"/>
