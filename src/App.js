@@ -1,35 +1,72 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
 import chatClient from './chatbot.js';
 import './App.css';
-
+import {BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip} from 'recharts';
 class App extends Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      log: []
+      log: "",
+      map: {},
+      words: []
     };
     let client = new chatClient({
-        channel: '#kamikat',
-        username: 'jaltron',
-        password: 'oauth:zcoxdqd7e9ntdubjgrbsv55ees2ars',
+        channel: '#riotgames',
+        username: 'requinn',
+        password: 'oauth:67hqi7y1taocu6knvw8sk33enwgaxe',
     });
     client.open();
     client.onMessageReceived = (message) => {
-      console.log(message);
-      let newLog = this.state.log.slice();
-      newLog.push(message);
-      console.log(newLog);
-        this.setState({
-          log: newLog
-
-        })
-      }
+      let newLog = this.state.log + " " + message.toLowerCase();
+      let map = this.wordcnt(newLog);
+      let words = this.map_to_objarray(map);
+      words.sort(function(a, b){return a.count - b.count});
+      this.setState({
+        log: newLog,
+        map,
+        words
+      });
+    }
   }
 
 
-  render() {
+
+  wordcnt(words) {
+    return words.replace(/( a |by|the| i )|[^\w\s]/g, "").split(/\s+/).reduce(function(map, word){
+      map[word] = (map[word]||0)+1;
+      return map;
+    }, Object.create(null));
+
+  }
+
+  map_to_objarray(map){
+    var a = [];
+    var size = map.length;
+    for(var m in map){
+      if(map[m] > 13){
+        a.push({word:m.substring(0), count:map[m]});
+      }
+    }
+    return a;
+  }
+  	render () {
+      console.log(this.state.words)
+    	return (
+      	<BarChart width={600} height={300} data={this.state.words}
+              margin={{top: 5, right: 30, left: 20, bottom: 5}}>
+         <XAxis dataKey="word"/>
+         <YAxis/>
+         <CartesianGrid strokeDasharray="3 3"/>
+         <Tooltip/>
+         <Bar dataKey="count" fill="#8884d8" />
+        </BarChart>
+      );
+    }
+  }
+
+
+/**  render() {
     return (
       <div className="App">
         <header className="App-header">
@@ -37,15 +74,11 @@ class App extends Component {
           <h1 className="App-title">Welcome to React</h1>
         </header>
         <p className="App-intro">
-          {
-            this.state.log.map((element,index) =>
-              <p key={index}>{element}</p>
-            )
-          }
+
         </p>
       </div>
     );
   }
-}
+}**/
 
 export default App;
