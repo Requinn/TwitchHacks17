@@ -13,28 +13,32 @@ class App extends Component {
       log: "",
       words: [],
       emote: [],
-      status: ""
+      status: "",
     };
 
   }
 
   onNewChannel(channel) {
-    this.setState({
-      log: "",
-      words: [],
-      emote: [],
-      channelName: ""
-    });
+
     let client = new chatClient({
         channel: '#'+ channel,
         username: 'requinn',
         password: 'oauth:67hqi7y1taocu6knvw8sk33enwgaxe',
     });
     client.open();
+    this.setState({
+      log: "",
+      words: [],
+      emote: [],
+      status: "Connecting",
+      client
+    });
     client.onMessageReceived = (message) => {
+      console.log(message);
       const newLog = this.state.log + " " + message;
       this.setState({
         log: newLog,
+        status: "Connected"
       });
     }
   }
@@ -81,7 +85,7 @@ class App extends Component {
               #
             </span>
             <input onChange={(event) => this.setState({channelName: event.target.value})} type="text"/>
-            <button onClick={(event) => this.onNewChannel("Bluenight3")}>
+            <button onClick={(event) => this.onNewChannel(this.state.channelName)}>
               Enter Channel
             </button>
             <span>
